@@ -8,6 +8,7 @@ Puppet::Functions.create_function(:'azure_key_vault::lookup') do
       vault_api_version => String,
       Optional[metadata_api_version] => String,
       confine_to_keys => Array[String],
+      Optional[key_prefix] => String,
       Optional[key_replacement_token] => String,
       Optional[service_principal_credentials] => String,
       Optional[use_azure_arc_authentication] => Boolean
@@ -36,6 +37,13 @@ Puppet::Functions.create_function(:'azure_key_vault::lookup') do
         context.explain { "Skipping azure_key_vault backend because secret_name '#{secret_name}' does not match confine_to_keys" }
         context.not_found
       end
+    end
+
+    # Adding optional prefix
+    key_prefix = options['key_prefix']
+    key_replacement_token = options['key_replacement_token']
+    if key_prefix
+      secret_name = "#{key_prefix}#{key_replacement_token}#{key_replacement_token}#{secret_name}"
     end
 
     normalized_secret_name = TragicCode::Azure.normalize_object_name(secret_name, options['key_replacement_token'] || '-')
