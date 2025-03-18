@@ -41,9 +41,8 @@ Puppet::Functions.create_function(:'azure_key_vault::lookup') do
 
     # Adding optional prefix
     key_prefix = options['key_prefix']
-    key_replacement_token = options['key_replacement_token']
     if key_prefix
-      secret_name = "#{key_prefix}#{key_replacement_token}#{key_replacement_token}#{secret_name}"
+      secret_name = "#{key_prefix}#{secret_name}"
     end
 
     normalized_secret_name = TragicCode::Azure.normalize_object_name(secret_name, options['key_replacement_token'] || '-')
