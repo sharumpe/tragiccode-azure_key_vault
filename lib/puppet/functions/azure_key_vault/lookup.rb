@@ -9,6 +9,7 @@ Puppet::Functions.create_function(:'azure_key_vault::lookup') do
       Optional[metadata_api_version] => String,
       confine_to_keys => Array[String],
       Optional[key_prefix] => String,
+      Optional[strip_from_keys] => Array[String],
       Optional[key_replacement_token] => String,
       Optional[service_principal_credentials] => String,
       Optional[use_azure_arc_authentication] => Boolean
@@ -43,6 +44,19 @@ Puppet::Functions.create_function(:'azure_key_vault::lookup') do
     key_prefix = options['key_prefix']
     if key_prefix
       secret_name = "#{key_prefix}#{secret_name}"
+
+    strip_from_keys = options['strip_from_keys']
+    if strip_from_keys
+      raise ArgumentError, 'strip_from_keys must be an array' unless strip_from_keys.is_a?(Array)
+
+      strip_from_keys.each do |prefix|
+        secret_name_before_strippers = secret_name
+        regex = Regexp.new(prefix)
+        if secret_name.match?(regex)
+          secret_name = secret_name.gsub(regex, '')
+          context.explain { "Stripping the following pattern of #{prefix} from secret_name.  The stripped secret_name has now changed from #{secret_name_before_strippers} to #{secret_name}" }
+        end
+      end
     end
 
     normalized_secret_name = TragicCode::Azure.normalize_object_name(secret_name, options['key_replacement_token'] || '-')
